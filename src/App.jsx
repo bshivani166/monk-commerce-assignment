@@ -335,6 +335,8 @@ function Products() {
     };
 
     // Function to toggle product selection
+
+    
     const handleSelectProductVariant = (productId, variantId) => {
       setProductCatalog(
         productCatalog.map((product) => {
