@@ -336,7 +336,7 @@ function Products() {
 
     // Function to toggle product selection
 
-    
+
     const handleSelectProductVariant = (productId, variantId) => {
       setProductCatalog(
         productCatalog.map((product) => {
@@ -583,7 +583,7 @@ function Products() {
 
     function DiscountView() {
       return product.discount.value === undefined ? (
-        <button onClick={enableDiscount} className="discount-btn">
+        <button onClick={enableDiscount} className="discount-btn" style={{color: '#ffffff'}}>
           Add Discount
         </button>
       ) : (
