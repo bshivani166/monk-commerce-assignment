@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDrag } from "react-dnd";
 
 import "./App.css";
 import "./index.css";
+
+const BaseUrl = "https://stageapi.monkcommerce.app/task/products/search";
 
 function DragIcon() {
   return (
@@ -197,129 +199,51 @@ function Products() {
   }
 
   function AddProductModal() {
-    // Define the initial product list
-    const initialProducts = [
-      {
-        id: 1,
-        name: "Long Socks - Made with natural materials",
-        variants: [
-          {
-            id: 0,
-            name: "S/ White / Cotton",
-            available: 99,
-            price: 3.99,
-            selected: false,
-          },
-          {
-            id: 1,
-            name: "M/ White / Cotton",
-            available: 99,
-            price: 3.99,
-            selected: false,
-          },
-          {
-            id: 2,
-            name: "L/ White / Cotton",
-            available: 99,
-            price: 3.99,
-            selected: false,
-          },
-        ],
-        selected: false,
-      },
-      {
-        id: 2,
-        name: "T-Shirt - Made with natural materials",
-        variants: [
-          {
-            id: 0,
-            name: "S/ White / Cotton",
-            available: 99,
-            price: 3.99,
-            selected: false,
-          },
-          {
-            id: 1,
-            name: "M/ White / Cotton",
-            available: 99,
-            price: 3.99,
-            selected: false,
-          },
-          {
-            id: 2,
-            name: "L/ White / Cotton",
-            available: 99,
-            price: 3.99,
-            selected: false,
-          },
-        ],
-        selected: false,
-      },
-      {
-        id: 3,
-        name: "Ankle Socks - Made with natural materials",
-        variants: [
-          {
-            id: 0,
-            name: "S/ White / Cotton",
-            available: 99,
-            price: 3.99,
-            selected: false,
-          },
-          {
-            id: 1,
-            name: "M/ White / Cotton",
-            available: 99,
-            price: 3.99,
-            selected: false,
-          },
-          {
-            id: 2,
-            name: "L/ White / Cotton",
-            available: 99,
-            price: 3.99,
-            selected: false,
-          },
-        ],
-        selected: false,
-      },
-      {
-        id: 4,
-        name: "Shorts - Made with natural materials",
-        variants: [
-          {
-            id: 0,
-            name: "S/ White / Cotton",
-            available: 99,
-            price: 3.99,
-            selected: false,
-          },
-          {
-            id: 1,
-            name: "M/ White / Cotton",
-            available: 99,
-            price: 3.99,
-            selected: false,
-          },
-          {
-            id: 2,
-            name: "L/ White / Cotton",
-            available: 99,
-            price: 3.99,
-            selected: false,
-          },
-        ],
-        selected: false,
-      },
-      // { id: 6, name: 'Printed T-shirt', variant: 'S/ White / Cotton', available: 75, price: 8.99, selected: false },
-    ];
-
     // State for product selection
+    const [isLoading, setLoading] = useState(true);
     const [productSelection, setProductSelection] = useState([]);
-    const [productCatalog, setProductCatalog] = useState(initialProducts);
+    const [productCatalog, setProductCatalog] = useState([]);
     const [productDisplay, setProductDisplay] = useState(
       productCatalog.map((product) => product.id)
     );
+    const [page, setPage] = useState(10);
+
+    function fetchData(search, page, limit) {
+      console.log("Fetching data", search, page, limit);
+      let url = BaseUrl + "?";
+      if (search) {
+        url += `search=${search}&`;
+      }
+      if (page) {
+        url += `page=${page}&`;
+      }
+      if (limit) {
+        url += `limit=${limit}&`;
+      }
+      url = url.slice(0, url.length - 1);
+      fetch(url, {
+        method: "get",
+        headers: { "x-api-key": "72njgfa948d9aS7gs5" },
+      }).then((response) =>
+        response.json().then((data) =>
+          setLoading((_) => {
+            setProductCatalog(data);
+            return false;
+          })
+        )
+      );
+    }
+
+    useEffect(function(){
+      fetchData(undefined, 1, 10);
+    }, [])
+
+    function trackScrolling(e){
+      const { scrollTop, scrollHeight, clientHeight } = e.target;
+      if (scrollTop + clientHeight === scrollHeight) {
+        setPage((_page) => _page + 10);
+      }
+    }
 
     const handleSelectProduct = (productId) => {
       setProductCatalog(
@@ -335,7 +259,6 @@ function Products() {
     };
 
     // Function to toggle product selection
-
 
     const handleSelectProductVariant = (productId, variantId) => {
       setProductCatalog(
@@ -474,44 +397,66 @@ function Products() {
           <div
             className="product-list"
             style={{ height: "435px", overflowY: "scroll" }}
+            onScroll={trackScrolling}
           >
-            {productCatalog.map((product) => {
-              if (!productDisplay.includes(product.id)) return;
-              return (
-                <div key={product.id} className="product-item">
-                  <div className="productName">
-                    <input
-                      htmlFor="name"
-                      type="checkbox"
-                      checked={product.selected}
-                      onChange={() => handleSelectProduct(product.id)}
-                    />
-                    <label id="name">{product.name}</label>
-                  </div>
-                  {product.variants.map((variant, vidx) => {
-                    return (
-                      <div className="productSize" key={vidx}>
-                        <input
-                          type="checkbox"
-                          checked={variant.selected}
-                          onChange={() =>
-                            handleSelectProductVariant(product.id, variant.id)
-                          }
-                        />
-                        <div
-                          className="size"
-                          style={{ display: "flex", alignItems: "center" }}
-                        >
-                          <span>{variant.name}</span>
-                          <span>{variant.available} available</span>
-                          <span>${variant.price.toFixed(2)}</span>
+            {isLoading ? (
+              <div
+                style={{
+                  height: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <span className="loader"></span>
+              </div>
+            ) : (
+              productCatalog.map((product) => {
+                return (
+                  <div key={product.id} className="product-item">
+                    <div className="productName">
+                      <input
+                        htmlFor="name"
+                        type="checkbox"
+                        checked={product.selected}
+                        onChange={() => handleSelectProduct(product.id)}
+                      />
+                      <img
+                        src={product.image.src}
+                        style={{
+                          height: "48px",
+                          width: "48px",
+                          borderRadius: "5px",
+                          border: "none",
+                        }}
+                      />
+                      <label id="name">{product.title}</label>
+                    </div>
+                    {product.variants.map((variant, vidx) => {
+                      return (
+                        <div className="productSize" key={vidx}>
+                          <input
+                            type="checkbox"
+                            checked={variant.selected}
+                            onChange={() =>
+                              handleSelectProductVariant(product.id, variant.id)
+                            }
+                          />
+                          <div
+                            className="size"
+                            style={{ display: "flex", alignItems: "center" }}
+                          >
+                            <span>{variant.title}</span>
+                            <span>{variant.available} available</span>
+                            <span>${variant.price}</span>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
+                      );
+                    })}
+                  </div>
+                );
+              })
+            )}
           </div>
           <div className="addProduct">
             <p>
@@ -583,7 +528,7 @@ function Products() {
 
     function DiscountView() {
       return product.discount.value === undefined ? (
-        <button onClick={enableDiscount} className="discount-btn" style={{color: '#ffffff'}}>
+        <button onClick={enableDiscount} className="discount-btn">
           Add Discount
         </button>
       ) : (
